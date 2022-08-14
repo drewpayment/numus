@@ -1,0 +1,450 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+generator typegraphql {
+  provider = "typegraphql-prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum AuthorRole {
+  admin
+  author
+  subscriber
+}
+
+model User {
+  uid Int @db.UnsignedInt @id @default(autoincrement())
+  id Int @db.UnsignedInt @unique
+  name String @db.VarChar(255)
+  email String @db.VarChar(255)
+  password String @db.VarChar(255)
+  remember_token String?
+  created_at DateTime? @default(now())
+  updated_at DateTime? @updatedAt
+  deleted_at DateTime?
+  role AuthorRole @default(subscriber)
+  
+  employee Employee @relation(fields: [id], references: [id])
+  clients ClientsOfUsers[]
+  
+  @@map("users")
+}
+
+model Client {
+  id Int @id @default(autoincrement())
+  name String
+  isActive Boolean @db.TinyInt @default(false)
+  
+  users ClientsOfUsers[]
+  
+  @@map("clients")
+}
+
+model ClientsOfUsers {
+  client Client @relation(fields: [clientId], references: [id])
+  clientId Int
+  user User @relation(fields: [userId], references: [uid])
+  userId Int @db.UnsignedInt
+  assignedAt DateTime @default(now())
+  assignedBy Int
+  
+  @@id([clientId, userId])
+  @@map("clients_users")
+}
+
+model Comment {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  on_post Int @db.UnsignedInt
+  from_user Int @db.UnsignedInt
+  body String
+  active Boolean @db.TinyInt
+  created_at DateTime?
+  updated_at DateTime?
+  
+  @@map("comments")
+}
+
+model CompanyOptions {
+  id Int @db.UnsignedMediumInt @id @default(autoincrement())
+  has_paystub_notifications Boolean @db.TinyInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("company_options")
+}
+
+model Document {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  name String @db.VarChar(255)
+  description String @db.VarChar(255)
+  file_path String @db.VarChar(255)
+  mime_type String @db.VarChar(255)
+  uploaded_by String @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("documents")
+}
+
+model Invoice {
+  invoice_id Int @db.UnsignedInt @id @default(autoincrement())
+  vendor String @db.VarChar(200)
+  sale_date DateTime 
+  first_name String 
+  last_name String 
+  address String @db.VarChar(200)
+  city String @db.VarChar(200)
+  status String 
+  amount String @db.VarChar(255)
+  agentid Int 
+  issue_date DateTime 
+  wkending DateTime 
+  created_at DateTime? @db.Timestamp(0) 
+  updated_at DateTime? @db.Timestamp(0) 
+  
+  employee EmployeeInvoice?
+  
+  @@map("invoices")
+}
+
+model EmployeeInvoice {
+  employee_id Int @db.UnsignedInt
+  invoice Invoice @relation(fields: [invoice_id], references: [invoice_id])
+  invoice_id Int @db.UnsignedInt @unique
+  
+  @@map("employee_invoice")
+  @@id([employee_id, invoice_id])
+}
+
+model Permission {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  emp_id Int 
+  is_active Boolean @db.TinyInt
+  created_at DateTime? @db.Timestamp(0) 
+  updated_at DateTime? @db.Timestamp(0)
+  
+  employee EmployeePermission?
+  
+  @@map("permissions")
+}
+
+model EmployeePermission {
+  employee_id Int @db.UnsignedInt
+  permission Permission @relation(fields: [permission_id], references: [id])
+  permission_id Int @db.UnsignedInt @unique
+  
+  @@map("employee_permission")
+  @@id([employee_id, permission_id])
+}
+
+model Employee {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  name String @db.VarChar(255)
+  email String @db.VarChar(255)
+  phone_no String? @db.VarChar(13)
+  address String @db.VarChar(255)
+  address_2 String? @db.VarChar(255)
+  city String? @db.VarChar(255)
+  state String? @db.VarChar(255)
+  postal_code String? @db.VarChar(255)
+  country String? @db.VarChar(255)
+  is_active Boolean @db.TinyInt
+  is_admin Boolean @db.TinyInt 
+  is_mgr Boolean @db.TinyInt
+  sales_id1 String @db.VarChar(15)
+  sales_id2 String @db.VarChar(15)
+  sales_id3 String @db.VarChar(15)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  hidden_payroll Boolean @db.TinyInt
+  deleted_at DateTime? @db.Timestamp(0)
+  has_been_fixed Boolean @db.TinyInt
+  
+  user User?
+  
+  @@map("employees")
+}
+
+model Expense {
+  expid Int @db.UnsignedInt @id @default(autoincrement())
+  vendor_id Int 
+  type String @db.VarChar(255)
+  amount Decimal @db.Decimal(19, 4)
+  notes String @db.VarChar(255)
+  agentid Int 
+  issue_date DateTime
+  wkending DateTime
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("expenses")
+}
+
+model Job {
+  id Int @id @default(autoincrement())
+  queue String 
+  payload String 
+  attempts Int @db.TinyInt
+  reserved_at DateTime? @db.Timestamp(0) 
+  available_date DateTime @db.Timestamp(0) 
+  created_at DateTime @db.Timestamp(0) 
+  
+  @@map("jobs")
+}
+
+model Link {
+  id Int @id @default(autoincrement())
+  name String
+  created_at DateTime? @db.Timestamp(0) 
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("links")
+}
+
+model Manager {
+  id Int @db.UnsignedMediumInt @id @default(autoincrement())
+  manager_id Int @db.UnsignedInt // employee_id - employee record of THIS manager
+  employee_id Int @db.UnsignedInt // manager's employee
+  created_at DateTime? @db.Timestamp(0) 
+  updated_at DateTime? @db.Timestamp(0) 
+  
+  @@map("manager_employees")
+}
+
+model Migration {
+  migration String @db.VarChar(255) @unique
+  batch Int
+  
+  @@map("migrations")
+}
+
+model AccessToken {
+  id String @id
+  user_id Int?
+  client_id Int 
+  name String?
+  scopes String?
+  revoked Int
+  created_at DateTime? @db.Timestamp(0) 
+  updated_at DateTime? @db.Timestamp(0) 
+  expires_at DateTime? @db.Timestamp(0) 
+  
+  @@map("oauth_access_tokens")
+}
+
+model AuthCode {
+  id String @id
+  user_id Int
+  client_id Int 
+  scopes String?
+  revoked Boolean @db.TinyInt
+  expires_at DateTime? @db.Timestamp(0) 
+  
+  @@map("oauth_auth_codes")
+}
+
+model OauthClient {
+  id Int @id @default(autoincrement())
+  user_id Int?
+  name String
+  secret String?
+  redirect String
+  personal_access_client Boolean @db.TinyInt
+  password_client Boolean @db.TinyInt
+  revoked Boolean @db.TinyInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0) 
+  
+  @@map("oauth_clients")
+}
+
+model PersonalAccessClient {
+  id Int @id @default(autoincrement())
+  client_id Int 
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("oauth_personal_access_clients")
+}
+
+model RefreshToken {
+  id String @id
+  access_token_id String
+  revoked Boolean @db.TinyInt
+  expires_at DateTime? @db.Timestamp(0)
+  
+  @@map("oauth_refresh_tokens")
+}
+
+model Override {
+  ovrid Int @db.UnsignedInt @id @default(autoincrement())
+  vendor_id Int 
+  name String @db.VarChar(255)
+  sales Int 
+  commission Decimal @db.Decimal(19, 4)
+  total Decimal @db.Decimal(19, 4)
+  agentid Int 
+  issue_date DateTime @db.Date
+  wkending DateTime @db.Date
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("overrides")
+}
+
+model PasswordReset {
+  email String @db.VarChar(255) @unique
+  token String @db.VarChar(255) @unique
+  created_at DateTime @db.Timestamp(0)
+  
+  @@map("password_resets")
+}
+
+model Payroll {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  agent_id Int @db.UnsignedInt
+  agent_name String @db.VarChar(255)
+  amount Decimal @db.Decimal(19, 4)
+  is_paid Boolean @db.TinyInt
+  vendor_id Int 
+  pay_date DateTime @db.Date
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("payroll")
+}
+
+model PayrollRestriction {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  hour Int 
+  minute Int 
+  modified_by Int 
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("payroll_restriction")
+}
+
+model Paystub {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  agent_id Int 
+  agent_name String @db.VarChar(255)
+  vendor_id Int 
+  vendor_name String @db.VarChar(255)
+  amount Decimal @db.Decimal(19, 4)
+  issue_date DateTime @db.Date 
+  weekend_date DateTime @db.Date
+  modified_by Int 
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("paystubs")
+}
+
+model PersonalAccessToken {
+  id Int @id @default(autoincrement())
+  tokenable_type String 
+  tokenable_id Int 
+  name String 
+  token String @db.VarChar(64)
+  abilities String?
+  last_used_at DateTime? @db.Timestamp(0) 
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("personal_access_tokens")
+}
+
+model BlogPost {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  author_id Int @db.UnsignedInt
+  title String @db.VarChar(255)
+  body String @db.Text
+  slug String @db.VarChar(255)
+  active Boolean @db.TinyInt
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("posts")
+}
+
+model TaggingTagGroup {
+  id Int @id @default(autoincrement())
+  slug String
+  name String
+  
+  @@map("tagging_tag_groups")
+}
+
+model TaggingTagged {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  taggable_id Int @db.UnsignedInt
+  taggable_type String @db.VarChar(255)
+  tag_name String @db.VarChar(255)
+  tag_slug String @db.VarChar(255)
+  
+  @@map("tagging_tagged")
+}
+
+model TaggingTag {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  tag_group_id Int? 
+  slug String @db.VarChar(255)
+  name String @db.VarChar(255)
+  suggest Boolean @db.TinyInt
+  count Int @db.UnsignedInt
+  
+  @@map("tagging_tags")
+}
+
+model TestimonialType {
+  id Int @id @default(autoincrement())
+  name String @db.VarChar(255)
+  type Int 
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("testimonial_types")
+}
+
+model Testimonial {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  content String @db.Text
+  location String @db.VarChar(255)
+  testimonial_type Int
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("testimonials")
+}
+
+model UserNotification {
+  id Int @db.UnsignedMediumInt @id @default(autoincrement())
+  user_id Int @db.UnsignedInt
+  employee_id Int @db.UnsignedInt
+  has_paystub_notifier Boolean @db.TinyInt
+  paystub_notifier_type Int? @db.UnsignedInt
+  notifier_destination String? @db.VarChar(255)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  
+  @@map("user_notifications")
+}
+
+model Vendor {
+  id Int @db.UnsignedInt @id @default(autoincrement())
+  name String @db.VarChar(300)
+  created_at DateTime? @db.Timestamp(0)
+  updated_at DateTime? @db.Timestamp(0)
+  is_active Boolean @db.TinyInt
+  
+  @@map("vendors")
+}
