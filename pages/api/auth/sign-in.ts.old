@@ -1,0 +1,47 @@
+import { NextApiRequest, NextApiResponse } from 'next';
+import { ApiResponse } from '../../../lib/models';
+import prisma from '../../../lib/prisma';
+import * as bcrypt from 'bcryptjs';
+
+type Data = {
+  email: string;
+}
+
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse<ApiResponse<Data>>,
+) {
+  if (req.method === 'POST') {
+    const user = await prisma.user.findFirst({
+      where: {
+        email: { equals: req.body.email, },
+      },
+    });
+    
+    if (!user) return res.status(403).json({
+      data: null,
+      isOk: false,
+      message: `Email or password incorrect. Please try again.`
+    });
+    
+    const passwordMatches = bcrypt.compareSync(req.body.password, user.password);
+    if (!passwordMatches) 
+      return res.status(401).json({
+        data: null,
+        isOk: false,
+        message: `Email or password incorrect. Please try again.`
+      });
+    // remove the hashed password
+    delete user.password;
+    
+    //TODO: ADD A JWT TOKEN HERE AND SEND BACK TO CLIENT
+  
+    return res.status(200).json({ 
+      data: user,
+      isOk: true,
+      message: `You've been signed in successfully!`,
+    });
+  }
+  
+  return res.status(200);
+}
