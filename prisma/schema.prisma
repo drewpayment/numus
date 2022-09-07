@@ -20,9 +20,19 @@ enum AuthorRole {
   subscriber
 }
 
+enum UserType {
+  sys_admin
+  client_admin
+  hr_admin
+  manager
+  supervisor
+  employee
+}
+
 model User {
   uid Int @db.UnsignedInt @id @default(autoincrement())
   id Int @db.UnsignedInt @unique
+  selectedClientId Int? @db.Int @default(0)
   name String @db.VarChar(255)
   email String @db.VarChar(255)
   password String @db.VarChar(255)
@@ -34,6 +44,7 @@ model User {
   
   employee Employee @relation(fields: [id], references: [id])
   clients ClientsOfUsers[]
+  selectedClient Client? @relation(fields: [selectedClientId], references: [id])
   
   @@map("users")
 }
@@ -44,6 +55,7 @@ model Client {
   isActive Boolean @db.TinyInt @default(false)
   
   users ClientsOfUsers[]
+  currentUsers User[]
   
   @@map("clients")
 }
@@ -53,6 +65,7 @@ model ClientsOfUsers {
   clientId Int
   user User @relation(fields: [userId], references: [uid])
   userId Int @db.UnsignedInt
+  userType UserType @default(employee)
   assignedAt DateTime @default(now())
   assignedBy Int
   

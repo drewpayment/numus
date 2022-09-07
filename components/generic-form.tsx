@@ -16,6 +16,7 @@ export type FormProps = {
 
 type Props = {
   url: string;
+  method?: string;
   renderForm: (formProps: FormProps) => React.ReactNode;
   /* If True, will make GET call to url to preload form data */
   preload?: boolean;
@@ -23,11 +24,11 @@ type Props = {
 
 const fetcher = (url: string, preload: boolean) => preload ? fetch(url).then((r) => r.json()) : {data: null};
 
-async function saveFormData(data: object, url: string) {
+async function saveFormData(data: object, url: string, method: string) {
   return await fetch(url, {
     body: JSON.stringify(data),
     headers: { 'Content-Type': 'application/json' },
-    method: 'POST',
+    method,
   });
 }
 
@@ -58,7 +59,7 @@ export function useConfirmRedirectIfDirty(isDirty: boolean) {
   }, [isDirty]);
 }
 
-function GenericForm({ url, renderForm, preload = false }: Props) {
+function GenericForm({ url, renderForm, preload = false, method = 'POST' }: Props) {
   // Fetch our initial form data
   const { data, error } = useSWR(url, () => fetcher(url, preload));
   const {
@@ -74,7 +75,7 @@ function GenericForm({ url, renderForm, preload = false }: Props) {
 
   // Submit handler which displays errors + success messages to the user
   const onSubmit = async (data: object) => {
-    const response = await saveFormData(data, url);
+    const response = await saveFormData(data, url, method);
 
     if (response.status === 400) {
       // Validation error, expect response to be a JSON response {"field": "error message for that field"}
@@ -117,7 +118,7 @@ function GenericForm({ url, renderForm, preload = false }: Props) {
 
   // Finally, render the form itself
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2 w-full">
       {renderForm({ register, errors, isSubmitting })}
       <ToastContainer position="bottom-center" />
     </form>

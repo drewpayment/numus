@@ -5,6 +5,7 @@ const nextConfig = {
   images: {
     domains: [
       'mdbcdn.b-cdn.net',
+      'via.placeholder.com',
     ],
   },
 }

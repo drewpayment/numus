@@ -1,11 +1,10 @@
-import NextAuth, { NextAuthOptions } from 'next-auth';
-import EmailProvider from 'next-auth/providers/email';
+import NextAuth, { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import prisma from '../../../lib/prisma';
+import AuthService from '../../../lib/auth.lib'
+import { FirestoreAdapter } from "@next-auth/firebase-adapter"
+import firebase from '../../../lib/firebase'
 
-export const options: NextAuthOptions ={
-  // adapter: PrismaAdapter(prisma),
+export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -16,18 +15,14 @@ export const options: NextAuthOptions ={
     colorScheme: 'dark',
   },
   callbacks: {
-    signIn(params) {
-      console.dir(params);
-      return true;
+    async signIn(params) {
+      return await AuthService.signIn(params);
     },
-    jwt(params) {
-      console.dir(params);
-      return params.token;
-    },
-    session(params) {
-      return params.session;  
-    },
-  }
+  },
+  
+  adapter: FirestoreAdapter({
+    ...firebase.config,
+  }),
 }
 
-export default NextAuth(options)
+export default NextAuth(authOptions)

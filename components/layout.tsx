@@ -1,6 +1,15 @@
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import LoginButton from './login-btn';
 
 const Layout = ({ children }) => {
+  const {data: session} = useSession();
+  
+  const buildLink = (dest: string, title: string) => {
+    if (session) return <li><Link href={dest}><a>{title}</a></Link></li>
+    return '';
+  }
+  
   return (
     <>
       <div className="navbar bg-base-100 md:p-4">
@@ -56,13 +65,12 @@ const Layout = ({ children }) => {
               </li>
             </ul>
           </div>
-          <a className="btn btn-ghost normal-case text-2xl">numus</a>
+          <Link href="/"><a className="btn btn-ghost normal-case text-2xl">numus</a></Link>
         </div>
         <div className="navbar-center hidden lg:flex">
           <ul className="menu menu-horizontal p-0">
-            <li>
-              <a>Item 1</a>
-            </li>
+            {buildLink('/account', 'Profile')}
+            {buildLink('/agents', 'Agents')}
             <li tabIndex={0}>
               <a>
                 Parent
